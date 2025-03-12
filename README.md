@@ -1,3 +1,4 @@
+![image](https://github.com/user-attachments/assets/a7c3d1d4-859b-4c80-ac58-e25f22842af7)
 # 🌟 Athrion-Template 🌟  
 *A modern, easy-to-use, and highly configurable mod menu template for Gorilla Tag!*  
 
