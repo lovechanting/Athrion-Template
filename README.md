@@ -52,7 +52,7 @@ Athrion-Template isn't just another mod menu base. It’s crafted to offer a **p
 ---
 
 ## 🏆 Credits  
-- **Mochi** – Creator & Lead Developer  
+- **ворона** – Creator & Lead Developer  
 - **Contributors** – Special thanks to those who support the project!  
 
 ---
