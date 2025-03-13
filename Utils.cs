@@ -394,23 +394,7 @@ namespace Athrion.Utilities
 
             bodyTransform.position += movementDirection;
         }
-        public static void StutterAll()
-        {
-            FriendingManager friendingManager = UnityEngine.Object.FindObjectOfType<FriendingManager>();
-
-            if (ControllerInputPoller.instance.rightControllerSecondaryButton)
-            {
-                if (Time.time > GTZoneDelay)
-                {
-                    GTZoneDelay = Time.time + 0.6f;
-
-                    for (int i = 0; i < 250; i++)
-                    {
-                        FriendshipGroupDetection.Instance.photonView.RPC("PartyMemberIsAboutToGroupJoin", RpcTarget.Others, new object[1]);
-                    }
-                }
-            }
-        }
+      
         public static void Name()
         {
             string playerName = new NetworkString<_512>("athrion".PadRight(3) + "on".PadRight(3) + "top").ToString();
