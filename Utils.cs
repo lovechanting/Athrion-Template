@@ -96,18 +96,18 @@ namespace Athrion.Utilities
         }
         public static void EnhancedMovement()
         {
-            bool isTouchingLeft = GorillaLocomotion.Player.Instance.IsHandTouching(true);
-            bool isTouchingRight = GorillaLocomotion.Player.Instance.IsHandTouching(false);
+            bool asfdsds = GorillaLocomotion.Player.Instance.IsHandTouching(true);
+            bool purebordem = GorillaLocomotion.Player.Instance.IsHandTouching(false);
 
-            if ((!isTouchingLeft && lasttouch) || (!isTouchingRight && lasttoruchruight))
+            if ((!asfdsds && lasttouch) || (!purebordem && lasttoruchruight))
             {
                 Vector3 currentVelocity = GorillaLocomotion.Player.Instance.GetComponent<Rigidbody>().velocity;
                 Vector3 enhancedMovement = new Vector3(currentVelocity.x * movementeh, 0f, currentVelocity.z * movementeh);
                 GorillaLocomotion.Player.Instance.transform.position += enhancedMovement;
             }
 
-            lasttouch = isTouchingLeft;
-            lasttoruchruight = isTouchingRight;
+            lasttouch = asfdsds;
+            lasttoruchruight = purebordem;
         }
       
         public static void ClimbAssist()
