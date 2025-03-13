@@ -56,17 +56,17 @@ namespace Athrion.Utilities
     public class Utils
     {
         #region Fields
-        private static Vector3 walkPos;
-        private static Vector3 walkNormal;
-        private static Vector3 gripPoint;
-        private static Vector3 gripNormal;
-        private static float stickFactor = 0.87f;
-        private static float weightAdjust = 0.45f;
+        private static Vector3 wpos;
+        private static Vector3 wnormal;
+        private static Vector3 gpoint;
+        private static Vector3 gnormal;
+        private static float stickshit = 0.87f;
+        private static float pulladjust = 0.45f;
         public static int score = 1;
         public static bool increasing = true;
-        private static float movementEnhancementFactor = 0.04f;
-        private static bool wasTouchingLeft = false;
-        private static bool wasTouchingRight = false;
+        private static float movementeh = 0.04f;
+        private static bool lasttouch = false;
+        private static bool lasttoruchruight = false;
         private static float GTZoneDelay = 0f;
         #endregion
         public static void WallWalk()
@@ -75,18 +75,18 @@ namespace Athrion.Utilities
             {
                 FieldInfo fieldInfo = typeof(GorillaLocomotion.Player).GetField("lastHitInfoHand", BindingFlags.NonPublic | BindingFlags.Instance);
                 RaycastHit ray = (RaycastHit)fieldInfo.GetValue(GorillaLocomotion.Player.Instance);
-                walkPos = ray.point;
-                walkNormal = ray.normal;
+                wpos = ray.point;
+                wnormal = ray.normal;
             }
 
             if (!ControllerInputPoller.instance.rightGrab)
             {
-                walkPos = Vector3.zero;
+                wpos = Vector3.zero;
             }
 
-            if (walkPos != Vector3.zero)
+            if (wpos != Vector3.zero)
             {
-                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(walkNormal * -9.81f, ForceMode.Acceleration);
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(wnormal * -9.81f, ForceMode.Acceleration);
                 ZeroGravity();
             }
         }
@@ -99,44 +99,17 @@ namespace Athrion.Utilities
             bool isTouchingLeft = GorillaLocomotion.Player.Instance.IsHandTouching(true);
             bool isTouchingRight = GorillaLocomotion.Player.Instance.IsHandTouching(false);
 
-            if ((!isTouchingLeft && wasTouchingLeft) || (!isTouchingRight && wasTouchingRight))
+            if ((!isTouchingLeft && lasttouch) || (!isTouchingRight && lasttoruchruight))
             {
                 Vector3 currentVelocity = GorillaLocomotion.Player.Instance.GetComponent<Rigidbody>().velocity;
-                Vector3 enhancedMovement = new Vector3(currentVelocity.x * movementEnhancementFactor, 0f, currentVelocity.z * movementEnhancementFactor);
+                Vector3 enhancedMovement = new Vector3(currentVelocity.x * movementeh, 0f, currentVelocity.z * movementeh);
                 GorillaLocomotion.Player.Instance.transform.position += enhancedMovement;
             }
 
-            wasTouchingLeft = isTouchingLeft;
-            wasTouchingRight = isTouchingRight;
+            lasttouch = isTouchingLeft;
+            lasttoruchruight = isTouchingRight;
         }
-        public static void CrashServer()
-        {
-            YorickLook yorickLook = UnityEngine.Object.FindObjectOfType<YorickLook>();
-            if (yorickLook == null || !PhotonNetwork.IsMasterClient) return;
-
-            Type vrRigCacheType = Type.GetType("VRRigCache, Assembly-CSharp");
-            if (vrRigCacheType == null) return;
-
-            MethodInfo getAllRigsMethod = vrRigCacheType.GetMethod("GetAllRigs", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (getAllRigsMethod == null) return;
-
-            object vrRigCacheInstance = UnityEngine.Object.FindObjectOfType(vrRigCacheType);
-            if (vrRigCacheInstance == null) return;
-
-            VRRig[] allRigs = (VRRig[])getAllRigsMethod.Invoke(vrRigCacheInstance, null);
-            if (allRigs == null || allRigs.Length == 0) return;
-
-            FieldInfo rigListField = vrRigCacheType.GetField("_rigList", BindingFlags.NonPublic | BindingFlags.Instance);
-            rigListField?.SetValue(vrRigCacheInstance, null);
-
-            foreach (var rig in allRigs)
-            {
-                if (rig != null && rig.tagSound != null)
-                {
-                    UnityEngine.Object.Destroy(rig.tagSound.gameObject);
-                }
-            }
-        }
+      
         public static void ClimbAssist()
         {
             var ply = GorillaLocomotion.Player.Instance;
@@ -147,30 +120,32 @@ namespace Athrion.Utilities
                 FieldInfo hitData = typeof(GorillaLocomotion.Player).GetField("lastHitInfoHand", BindingFlags.NonPublic | BindingFlags.Instance);
                 RaycastHit hit = (RaycastHit)hitData.GetValue(ply);
 
-                gripPoint = hit.point;
-                gripNormal = hit.normal;
+                gpoint = hit.point;
+                gnormal = hit.normal;
             }
 
             if (!holding)
             {
-                gripPoint = Vector3.zero;
+                gpoint = Vector3.zero;
             }
 
-            if (gripPoint != Vector3.zero)
+            if (gpoint != Vector3.zero)
             {
                 Rigidbody rb = ply.bodyCollider.attachedRigidbody;
-                Vector3 force = gripNormal * (-9.81f * weightAdjust);
+                Vector3 force = gnormal * (-9.81f * pulladjust);
                 rb.AddForce(force, ForceMode.Acceleration);
 
                 ajvel(rb);
             }
         }
+        
         private static void ajvel(Rigidbody rb)
         {
             if (rb == null) return;
 
-            rb.velocity = Vector3.Lerp(rb.velocity, Vector3.zero, Time.deltaTime * (1f - Mathf.Clamp01(stickFactor)));
+            rb.velocity = Vector3.Lerp(rb.velocity, Vector3.zero, Time.deltaTime * (1f - Mathf.Clamp01(stickshit)));
         }
+        
         public static void tenhertz()
         {
             VRRig rasedadsa = UnityEngine.Object.FindObjectOfType<VRRig>();
@@ -191,6 +166,7 @@ namespace Athrion.Utilities
                 regfedsrvwed.Invoke(bfdbfdrsgbdsgds, new object[] { tdrhwerfewfeqfwe });
             }
         }
+        
         public static void SSHoverboard()
         {
             GorillaTagger.Instance.offlineVRRig.hoverboardVisual.enabled = true;
