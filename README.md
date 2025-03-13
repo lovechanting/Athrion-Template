@@ -2,7 +2,7 @@
 # 🌟 Athrion-Template 🌟  
 *A modern, easy-to-use, and highly configurable mod menu template for Gorilla Tag!*  
 
-**Created with style and uniqueness by [Mochi]**, Athrion-Template is designed to be the ultimate base for developers looking to create their own **custom mod menus**. Built with efficiency, performance, and customization in mind, this template provides a **clean and structured** foundation, allowing you to modify and expand it with ease.  
+**Created with style and uniqueness by [ворона]**, Athrion-Template is designed to be the ultimate base for developers looking to create their own **custom mod menus**. Built with efficiency, performance, and customization in mind, this template provides a **clean and structured** foundation, allowing you to modify and expand it with ease.  
 
 ---
 
