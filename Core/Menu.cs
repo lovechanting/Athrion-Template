@@ -116,7 +116,6 @@ namespace Athrion.Core
             { "Exploits", new Button[] {
                 new Button("Home", false, Athrion.Core.Handlers.Categories.Home),
                 new Button("STA 1", true, Utilities.Utils.STA),
-                new Button("STA 2", true, Utilities.Utils.StutterAll),
                 new Button("Static Score", false, Utilities.Utils.NetworkString),
                 new Button("Dymanic Score", true, Utilities.Utils.stst),
             }}
