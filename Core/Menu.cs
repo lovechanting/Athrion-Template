@@ -77,20 +77,15 @@ namespace Athrion.Core
             }},
             { "Movement", new Button[] {
                 new Button("Home", false, Athrion.Core.Handlers.Categories.Home),
-                new Button("Wall Walk", true, Utilities.Utils.WallWalk),
-                new Button("Wall Assist", true, Utilities.Utils.ClimbAssist),
                 new Button("Platforms", true, PlatformLibrary.SpawnPlatform),
-                new Button("Ten Hertz", true, Utilities.Utils.tenhertz),
+                new Button("TP Gun", true, Utilities.Utils.TeleportGun),
                 new Button("Controller Fly", true, Utilities.Utils.ControlledFly),
-                new Button("Hoverboard Boost", false, Utilities.Utils.HoverboardFoward),
-                new Button("Movement EC", true, Utilities.Utils.EnhancedMovement),
-                new Button("Low Gravity", true, Utilities.Utils.MovementLerp),
-                new Button("Hoverboard Speed", true, Utilities.Utils.HoverBoardBoost),
+                new Button("Pull Mod", true, Utilities.Utils.PullMod),
                 new Button("Leap Up", true, Utilities.Utils.LeapForward),
                 new Button("Leap Infront", true, Utilities.Utils.LeapInfront),
                 new Button("Leap Behind", true, Utilities.Utils.LeapBehind),
                 new Button("Ironman", true, Utilities.Utils.IronManFlight),
-                new Button("Object Spawner", true, ObjectSpawner.spawnblockorwtv),
+                new Button("Sandbox Cube", true, ObjectSpawner.spawnblockorwtv),
             }},
             { "Guardian", new Button[] {
                 new Button("Home", false, Athrion.Core.Handlers.Categories.Home),
@@ -107,15 +102,22 @@ namespace Athrion.Core
             }},
             { "Advantage", new Button[] {
                 new Button("Home", false, Athrion.Core.Handlers.Categories.Home),
-                new Button("Low Tag Reach", true, Utilities.Utils.TagRL),
-                new Button("Far Teach Reach", true, Utilities.Utils.TagReach),
+                new Button("Tag Reach 1", true, Utilities.Utils.TagRL),
+                new Button("Tag Reach 2", true, Utilities.Utils.TagReach),
+                new Button("Any Distance", true, Utilities.Utils.RemoveDistanceCheck),
+                new Button("XRAY Tag", true, Utilities.Utils.TagThroughWalls),
+                new Button("Wall Assist", true, Utilities.Utils.ClimbAssist),
+                new Button("0 Tag Delay", true, Utilities.Utils.BypassTagCooldown),
+                new Button("Wall Walk", true, Utilities.Utils.WallWalk),
             }},
             { "Graphics", new Button[] {
                 new Button("Home", false, Athrion.Core.Handlers.Categories.Home),
+
             }},
             { "Exploits", new Button[] {
                 new Button("Home", false, Athrion.Core.Handlers.Categories.Home),
                 new Button("STA 1", true, Utilities.Utils.STA),
+                new Button("STA 2", true, Utilities.Utils.StutterAll),
                 new Button("Static Score", false, Utilities.Utils.NetworkString),
                 new Button("Dymanic Score", true, Utilities.Utils.stst),
             }}
