@@ -1,4 +1,4 @@
-﻿using Athrion;
+using Athrion;
 using ExitGames.Client.Photon;
 using ExitGames.Client.Photon.StructWrapping;
 using GorillaExtensions;
@@ -50,6 +50,7 @@ using System.Runtime.Serialization.Json;
 using GorillaTag.GuidedRefs;
 using Photon.Voice.PUN.UtilityScripts;
 using SphereMod;
+using Athrion.Libary;
 
 namespace Athrion.Utilities
 {
@@ -90,11 +91,47 @@ namespace Athrion.Utilities
                 ZeroGravity();
             }
         }
+
+        internal static void TeleportGun()
+        {
+            Libary.AthrionGunLibrary.start2guns(() =>
+            {
+                if (PhotonNetwork.InRoom)
+                {
+                    Vector3 pointerpos = AthrionGunLibrary.GetPointerPos();
+
+                    if (pointerpos != Vector3.zero)
+                    {
+                        GorillaLocomotion.Player.Instance.transform.position = pointerpos + new Vector3(0, 0.1f, 0);
+                    }
+                }
+            }, false);
+        }
+
+        internal static void ExampleGunLib(/* */)
+        {
+            Libary.AthrionGunLibrary.start2guns(() =>
+            {
+                if (Libary.AthrionGunLibrary.LockedRigOrPlayerOrwhatever != null && PhotonNetwork.InRoom)
+                {
+                    VRRig rig = Libary.AthrionGunLibrary.LockedRigOrPlayerOrwhatever;
+                    int targetActorNumber = rig.Creator.ActorNumber;
+                    Player targetPlayer = PhotonNetwork.CurrentRoom.GetPlayer(targetActorNumber);
+
+                    if (targetPlayer != null && rig.Creator.ActorNumber == targetActorNumber)
+                    {
+                        // code
+                    }
+                }
+            }, true);
+        }
+
         public static void ZeroGravity()
         {
             GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(Vector3.up * (Time.deltaTime * (9.81f / Time.deltaTime)), ForceMode.Acceleration);
         }
-        public static void EnhancedMovement()
+
+        public static void PullMod()
         {
             bool asfdsds = GorillaLocomotion.Player.Instance.IsHandTouching(true);
             bool purebordem = GorillaLocomotion.Player.Instance.IsHandTouching(false);
@@ -109,7 +146,7 @@ namespace Athrion.Utilities
             lasttouch = asfdsds;
             lasttoruchruight = purebordem;
         }
-      
+
         public static void ClimbAssist()
         {
             var ply = GorillaLocomotion.Player.Instance;
@@ -138,52 +175,12 @@ namespace Athrion.Utilities
                 ajvel(rb);
             }
         }
-        
+
         private static void ajvel(Rigidbody rb)
         {
             if (rb == null) return;
 
             rb.velocity = Vector3.Lerp(rb.velocity, Vector3.zero, Time.deltaTime * (1f - Mathf.Clamp01(stickshit)));
-        }
-        
-        public static void tenhertz()
-        {
-            VRRig rasedadsa = UnityEngine.Object.FindObjectOfType<VRRig>();
-            HoverboardAreaTrigger bfdbfdrsgbdsgds = UnityEngine.Object.FindObjectOfType<HoverboardAreaTrigger>();
-
-            if (rasedadsa == null || bfdbfdrsgbdsgds == null)
-                return;
-
-            Collider tdrhwerfewfeqfwe = rasedadsa.GetComponent<Collider>();
-            if (tdrhwerfewfeqfwe == null)
-                return;
-
-            Type sdfdsfdsfsdf = typeof(HoverboardAreaTrigger);
-            MethodInfo regfedsrvwed = sdfdsfdsfsdf.GetMethod("OnTriggerEnter", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (regfedsrvwed != null)
-            {
-                bfdbfdrsgbdsgds.gameObject.SetActive(true);
-                regfedsrvwed.Invoke(bfdbfdrsgbdsgds, new object[] { tdrhwerfewfeqfwe });
-            }
-        }
-        
-        public static void SSHoverboard()
-        {
-            GorillaTagger.Instance.offlineVRRig.hoverboardVisual.enabled = true;
-            GorillaLocomotion.Player.Instance.SetEnableHoverboard(true);
-        }
-        public static void hiii()
-        {
-            GameObject hoverboard = GameObject.Find("Hoverboard");
-            GorillaLocomotion.Player.Instance.SetEnableHoverboard(true);
-            hoverboard.gameObject.active = true;
-            if (ControllerInputPoller.instance.rightControllerSecondaryButton)
-            {
-                Vector3 nanPosition = new Vector3(float.NaN, float.NaN, float.NaN);
-                Quaternion validRotation = Quaternion.identity;
-
-                GorillaLocomotion.Player.Instance.SetHoverboardPosRot(nanPosition, validRotation);
-            }
         }
         public static void IronManFlight()
         {
@@ -202,17 +199,7 @@ namespace Athrion.Utilities
                 stopparts(rightHand);
             }
         }
-        public static void HoverBoardBoost()
-        {
-            if (ControllerInputPoller.instance.rightControllerSecondaryButton)
-            {
-                GorillaLocomotion.Player.Instance.SetEnableHoverboard(true);
-                GorillaLocomotion.Player.Instance.SetHoverboardPosRot(GorillaTagger.Instance.myVRRig.gameObject.transform.forward, quaternion.identity);
-                GorillaLocomotion.Player.Instance.frictionConstant.MustBeEqual(4400);
-                GorillaLocomotion.Player.Instance.rightControllerTransform.ForceSave();
-                GorillaLocomotion.Player.Instance.leftControllerTransform.ForceSave();
-            }
-        }
+
         public static void rpcprot()
         {
             var GorillaNotShit = GorillaNot.instance;
@@ -241,7 +228,7 @@ namespace Athrion.Utilities
 
             PhotonNetwork.NetworkingClient.LoadBalancingPeer.TransportProtocol = ExitGames.Client.Photon.ConnectionProtocol.Udp;
             PhotonNetwork.NetworkingClient.LoadBalancingPeer.LimitOfUnreliableCommands = int.MaxValue;
-            
+
             GorillaNotShit.OnPlayerLeftRoom(PhotonNetwork.LocalPlayer); // This is useless btw i just use it for future cases
 
             PhotonNetwork.NetworkingClient.LoadBalancingPeer.DisconnectTimeout = int.MaxValue;
@@ -343,34 +330,7 @@ namespace Athrion.Utilities
                 p.bodyCollider.attachedRigidbody.velocity = leaparea;
             }
         }
-        public static void VelocityFly()
-        {
-            var Player = GorillaLocomotion.Player.Instance;
-        }
-        public static void MovementLerp()
-        {
-            ZeroGravity();
 
-            var player = GorillaLocomotion.Player.Instance;
-            var bodyTransform = player.bodyCollider.transform;
-            var leftJoystick = SteamVR_Actions.gorillaTag_LeftJoystick2DAxis.GetAxis(SteamVR_Input_Sources.LeftHand);
-            var rightJoystick = SteamVR_Actions.gorillaTag_RightJoystick2DAxis.GetAxis(SteamVR_Input_Sources.RightHand);
-
-            Vector2 xz = leftJoystick;
-            float y = rightJoystick.y;
-           
-            Vector3 inputDirection = new Vector3(xz.x, y, xz.y);
-            var playerForward = bodyTransform.forward;
-            playerForward.y = 0;
-            var playerRight = bodyTransform.right;
-            playerRight.y = 0;
-
-            Vector3 movementDirection = inputDirection.x * playerRight + y * Vector3.up + inputDirection.z * playerForward;
-            movementDirection *= player.scale * 10 * Time.deltaTime;
-
-            bodyTransform.position += movementDirection;
-        }
-      
         public static void Name()
         {
             string playerName = new NetworkString<_512>("athrion".PadRight(3) + "on".PadRight(3) + "top").ToString();
@@ -437,11 +397,12 @@ namespace Athrion.Utilities
                 Debug.Log($"Can't convert {gds.ToString()}");
             }
         }
+    
         public static void STA()
         {
             FriendingManager friendingManager = UnityEngine.Object.FindObjectOfType<FriendingManager>();
 
-            if (ControllerInputPoller.instance.rightControllerSecondaryButton)
+            if (ControllerInputPoller.instance.rightGrab)
             {
                 if (Time.time > GTZoneDelay)
                 {
@@ -452,7 +413,39 @@ namespace Athrion.Utilities
                     }
                 }
             }
-         }
+        }
+
+        public static void playerid()
+        {
+            var asdfsd = PhotonNetwork.LocalPlayer.UserId.ToString();
+            Debug.Log(asdfsd);
+        }
+
+        public static void RemoveDistanceCheck()
+        {
+            typeof(VRRig).GetMethod("CheckDistance").Invoke(null, new object[] { Vector3.zero, 99999f });
+            typeof(VRRig).GetMethod("CheckTagDistanceRollback").Invoke(null, new object[] { null, 99999f, 0f });
+            TagPatch.EST();
+        }
+        public static void TagThroughWalls()
+        {
+            var gorillaTagger = GameObject.FindObjectOfType<GorillaTagger>();
+            if (gorillaTagger == null) return;
+
+            var gorillaTagColliderLayerMaskField = typeof(GorillaTagger).GetField(
+                "gorillaTagColliderLayerMask",
+                BindingFlags.NonPublic | BindingFlags.Instance
+            );
+
+            if (gorillaTagColliderLayerMaskField != null)
+            {
+                gorillaTagColliderLayerMaskField.SetValue(gorillaTagger, LayerMask.GetMask("Default"));
+            }
+            else
+            {
+                Debug.LogError("nono work");
+            }
+        }
         public static bool PlayerIsTagged(VRRig player)
         {
             if (player == null || player.mainSkin?.material == null)
@@ -463,25 +456,20 @@ namespace Athrion.Utilities
                    matname.Contains("stealth") || matname.Contains("ice") ||
                    !player.nameTagAnchor.activeSelf;
         }
+        public static void BypassTagCooldown()
+        {
+            var gorillaTagger = GameObject.FindObjectOfType<GorillaTagger>();
+            if (gorillaTagger == null) return;
+
+            gorillaTagger.tagCooldown = 0f;
+        }
         public static void SetTagReach(float radius)
         {
             bool isTagged = PlayerIsTagged(GorillaTagger.Instance?.offlineVRRig);
             SphereCastPatch.PatchEnabled = isTagged;
-            SphereCastPatch.OverrideRadius = isTagged ? radius : 0.1f; 
+            SphereCastPatch.OverrideRadius = isTagged ? radius : 0.1f;
         }
         public static void TagReach() => SetTagReach(3f);
         public static void TagRL() => SetTagReach(1.3f);
-        public static void HoverboardFoward()
-        {
-            GameObject hoverboard = GameObject.Find("Hoverboard");
-            GorillaLocomotion.Player.Instance.SetEnableHoverboard(true);
-            hoverboard.gameObject.active = true;
-            if (ControllerInputPoller.instance.rightControllerSecondaryButton)
-            {
-                Quaternion validRotation = Quaternion.identity;
-
-                GorillaLocomotion.Player.Instance.SetHoverboardPosRot(GorillaTagger.Instance.rightHandTransform.forward * 5, validRotation);
-            }
-        }
     }
 }
