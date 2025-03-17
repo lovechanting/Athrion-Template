@@ -1,81 +1,41 @@
-using BepInEx;
-using BepInEx.Configuration;
+﻿using BepInEx;
 using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using PlayFab.ClientModels;
 using UnityEngine;
 
 namespace Athrion
 {
-    public class RigManager : MonoBehaviour
+    public class RigManager
     {
-        public static RigManager Instance { get; private set; }
-
-        private static ConfigEntry<float> MaxDistanceForClosestRig;
-        private static ConfigEntry<bool> IncludeSelfInRandomSelection;
-
-        private List<VRRig> _cachedRigs;
-        private DateTime _lastCacheUpdate;
-
-        public event Action<VRRig> OnClosestRigFound;
-        public event Action<Photon.Realtime.Player> OnRandomPlayerSelected;
-
-        private void Awake()
+        // Credits to IIDK
+        
+        public static VRRig GetVRRigFromPlayer(NetPlayer p)
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(this);
-                return;
-            }
-            Instance = this;
-            DontDestroyOnLoad(this);
-            LoadConfiguration();
+            return GorillaGameManager.instance.FindPlayerVRRig(p);
         }
 
-        private void LoadConfiguration()
+        public static VRRig GetRandomVRRig(bool includeSelf)
         {
-            MaxDistanceForClosestRig = Config.Bind("General", "MaxDistanceForClosestRig", 10.0f, "");
-            IncludeSelfInRandomSelection = Config.Bind("General", "IncludeSelfInRandomSelection", true, "");
-        }
-
-        public VRRig GetVRRigFromPlayer(NetPlayer player)
-        {
-            if (player == null)
+            Photon.Realtime.Player randomPlayer;
+            if (includeSelf)
             {
-                Logger.LogError("Player is null.");
-                return null;
+                randomPlayer = PhotonNetwork.PlayerList[UnityEngine.Random.Range(0, PhotonNetwork.PlayerList.Length - 1)];
             }
-            return GorillaGameManager.instance?.FindPlayerVRRig(player);
-        }
-
-        public VRRig GetRandomVRRig(bool includeSelf = false)
-        {
-            var players = includeSelf ? PhotonNetwork.PlayerList : PhotonNetwork.PlayerListOthers;
-            if (players == null || players.Length == 0)
+            else
             {
-                Logger.LogError("No players available.");
-                return null;
+                randomPlayer = PhotonNetwork.PlayerListOthers[UnityEngine.Random.Range(0, PhotonNetwork.PlayerListOthers.Length - 1)];
             }
-            var randomPlayer = players[UnityEngine.Random.Range(0, players.Length)];
-            OnRandomPlayerSelected?.Invoke(randomPlayer);
             return GetVRRigFromPlayer(randomPlayer);
         }
 
-        public VRRig GetClosestVRRig()
+        public static VRRig GetClosestVRRig()
         {
-            if (GorillaParent.instance?.vrrigs == null || GorillaTagger.Instance?.bodyCollider == null)
-            {
-                Logger.LogError("Required components are not initialized.");
-                return null;
-            }
-
             float closestDistance = float.MaxValue;
             VRRig closestRig = null;
 
-            foreach (var vrrig in GorillaParent.instance.vrrigs)
+            foreach (VRRig vrrig in GorillaParent.instance.vrrigs)
             {
                 if (vrrig == null || vrrig == GorillaTagger.Instance.myVRRig)
                     continue;
@@ -89,105 +49,59 @@ namespace Athrion
                 }
             }
 
-            if (closestDistance <= MaxDistanceForClosestRig.Value)
-            {
-                OnClosestRigFound?.Invoke(closestRig);
-                return closestRig;
-            }
+            if (closestRig == null || closestDistance == float.MaxValue)
+                return null;
 
-            Logger.LogWarning("No rig found within the maximum distance.");
-            return null;
+            if (closestDistance > 10.0f) 
+                return null;
+
+            return closestRig;
         }
 
-        public PhotonView GetPhotonViewFromVRRig(VRRig vrRig)
+        public static PhotonView GetPhotonViewFromVRRig(VRRig p)
         {
-            if (vrRig == null)
-            {
-                Logger.LogError("VRRig is null.");
-                return null;
-            }
-            return Traverse.Create(vrRig).Field<PhotonView>("photonView").Value;
+            return (PhotonView)Traverse.Create(p).Field("photonView").GetValue();
         }
 
-        public NetworkView GetNetworkViewFromVRRig(VRRig vrRig)
+        public static NetworkView GetNetworkViewFromVRRig(VRRig p)
         {
-            if (vrRig == null)
-            {
-                Logger.LogError("VRRig is null.");
-                return null;
-            }
-            return Traverse.Create(vrRig).Field<NetworkView>("netView").Value;
+            return (NetworkView)Traverse.Create(p).Field("netView").GetValue();
         }
 
-        public Photon.Realtime.Player GetRandomPlayer(bool includeSelf = false)
+        public static Photon.Realtime.Player GetRandomPlayer(bool includeSelf)
         {
-            var players = includeSelf ? PhotonNetwork.PlayerList : PhotonNetwork.PlayerListOthers;
-            if (players == null || players.Length == 0)
+            if (includeSelf)
             {
-                Logger.LogError("No players available.");
-                return null;
+                return PhotonNetwork.PlayerList[UnityEngine.Random.Range(0, PhotonNetwork.PlayerList.Length - 1)];
             }
-            var randomPlayer = players[UnityEngine.Random.Range(0, players.Length)];
-            OnRandomPlayerSelected?.Invoke(randomPlayer);
-            return randomPlayer;
+            else
+            {
+                return PhotonNetwork.PlayerListOthers[UnityEngine.Random.Range(0, PhotonNetwork.PlayerListOthers.Length - 1)];
+            }
         }
 
-        public Player NetPlayerToPlayer(NetPlayer netPlayer)
+        public static Player NetPlayerToPlayer(NetPlayer p)
         {
-            if (netPlayer == null)
-            {
-                Logger.LogError("NetPlayer is null.");
-                return null;
-            }
-            return netPlayer.GetPlayerRef();
+            return p.GetPlayerRef();
         }
 
-        public NetPlayer GetPlayerFromVRRig(VRRig vrRig)
+        public static NetPlayer GetPlayerFromVRRig(VRRig p)
         {
-            if (vrRig == null)
-            {
-                Logger.LogError("VRRig is null.");
-                return null;
-            }
-            return vrRig.Creator;
+            return p.Creator;
         }
 
-        public NetPlayer GetPlayerFromID(string id)
+        public static NetPlayer GetPlayerFromID(string id)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                Logger.LogError("ID is null or empty.");
-                return null;
-            }
-            foreach (var target in PhotonNetwork.PlayerList)
+            NetPlayer found = null;
+            foreach (Photon.Realtime.Player target in PhotonNetwork.PlayerList)
             {
                 if (target.UserId == id)
                 {
-                    return target;
+                    found = target;
+                    break;
                 }
             }
-            Logger.LogWarning($"Player with ID {id} not found.");
-            return null;
-        }
-
-        public async Task UpdateCachedRigsAsync()
-        {
-            if (DateTime.Now - _lastCacheUpdate < TimeSpan.FromSeconds(10))
-            {
-                Logger.LogInfo("Cache is still fresh.");
-                return;
-            }
-            _cachedRigs = new List<VRRig>(GorillaParent.instance.vrrigs);
-            _lastCacheUpdate = DateTime.Now;
-            Logger.LogInfo("VRRig cache updated.");
-        }
-    }
-
-    public static class RigManagerExtensions
-    {
-        public static Player ToPlayer(this NetPlayer netPlayer)
-        {
-            return RigManager.Instance.NetPlayerToPlayer(netPlayer);
+            return found;
         }
     }
 }
