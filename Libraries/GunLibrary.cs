@@ -1,6 +1,6 @@
-﻿using BepInEx;
+using BepInEx;
 using Photon.Pun;
-using Athrion.Libary;  
+using Athrion.Libary;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,29 +10,46 @@ using UnityEngine.XR;
 
 namespace Athrion.Libary
 {
+    public class Config
+    {
+        public Vector3 PointerScale { get; set; } = new Vector3(0.2f, 0.2f, 0.2f);
+        public Color32 PointerColorStart { get; set; } = new Color32(0, 255, 100, 255);
+        public Color32 PointerColorEnd { get; set; } = new Color32(0, 200, 255, 255);
+        public Color32 TriggeredPointerColorStart { get; set; } = new Color32(255, 100, 50, 255);
+        public Color32 TriggeredPointerColorEnd { get; set; } = new Color32(255, 150, 0, 255);
+        public float LineWidth { get; set; } = 0.03f;
+        public Color32 LineColorStart { get; set; } = new Color32(0, 255, 150, 255);
+        public Color32 LineColorEnd { get; set; } = new Color32(0, 180, 255, 255);
+        public Color32 TriggeredLineColorStart { get; set; } = new Color32(255, 100, 50, 255);
+        public Color32 TriggeredLineColorEnd { get; set; } = new Color32(255, 150, 0, 255);
+        public bool EnableAnimations { get; set; } = true;
+        public float PulseSpeed { get; set; } = 2f;
+        public float PulseAmplitude { get; set; } = 0.04f;
+        public bool EnableParticles { get; set; } = true;
+        public float ParticleStartSize { get; set; } = 0.1f;
+        public float ParticleStartSpeed { get; set; } = 0.5f;
+        public int ParticleMaxCount { get; set; } = 100;
+        public float ParticleEmissionRate { get; set; } = 20f;
+        public bool EnableBoxESP { get; set; } = true;
+        public float BoxESPWidth { get; set; } = 1.0f;
+        public float BoxESPHeight { get; set; } = 2.0f;
+        public Color32 BoxESPColor { get; set; } = new Color32(0, 255, 100, 255);
+        public Color32 BoxESPOuterColor { get; set; } = new Color32(255, 150, 0, 255);
+        public int LineCurve { get; set; } = 150;
+        public float WaveFrequency { get; set; } = 5f;
+        public float WaveAmplitude { get; set; } = 0.05f;
+    }
+
     public class AthrionGunLibrary : MonoBehaviour
     {
-        public static int LineCurve = 150;
-        private const float PointerScale = 0.2f;
-        private const float LineWidth = 0.03f;
-        private const float PulseSpeed = 2f;
-        private const float PulseAmplitude = 0.04f;
-
+        public static Config GunConfig = new Config();
         public static GameObject spherepointer;
         public static VRRig LockedRigOrPlayerOrwhatever;
         public static Vector3 lr;
         public static ParticleSystem particleSystem;
-        public static Color32 PointerColorStart = new Color32(0, 255, 100, 255);
-        public static Color32 PointerColorEnd = new Color32(0, 200, 255, 255);
-        public static Color32 LineColorStart = new Color32(0, 255, 150, 255);
-        public static Color32 LineColorEnd = new Color32(0, 180, 255, 255);
-        public static Color32 TriggeredPointerColorStart = new Color32(255, 100, 50, 255);
-        public static Color32 TriggeredPointerColorEnd = new Color32(255, 150, 0, 255);
-        public static Color32 TriggeredLineColorStart = new Color32(255, 100, 50, 255);
-        public static Color32 TriggeredLineColorEnd = new Color32(255, 150, 0, 255);
-        public static bool enableParticles = true;
-
         private static float waveTimeOffset = 0f;
+        private static bool colorIndexInitialized = false;
+        private static int ColorIndex = 0;
 
         public enum AnimationMode
         {
@@ -47,14 +64,6 @@ namespace Athrion.Libary
             Sawtooth,
             TriangleWave,
             DefaultBezier
-        }
-
-        public enum PointerShape
-        {
-            Sphere,
-            Cube,
-            Plane,
-            Cylinder
         }
 
         private static AnimationMode currentAnimationMode = AnimationMode.DefaultBezier;
@@ -72,63 +81,60 @@ namespace Athrion.Libary
 
         private static void CurveLineRenderer(LineRenderer lineRenderer, Vector3 start, Vector3 mid, Vector3 end)
         {
-            lineRenderer.positionCount = LineCurve;
+            lineRenderer.positionCount = GunConfig.LineCurve;
             waveTimeOffset += Time.deltaTime * 2f;
 
-            float frequency = 5f;
-            float amplitude = 0.05f;
-
-            for (int i = 0; i < LineCurve; i++)
+            for (int i = 0; i < GunConfig.LineCurve; i++)
             {
-                float t = (float)i / (LineCurve - 1);
+                float t = (float)i / (GunConfig.LineCurve - 1);
                 Vector3 position;
 
                 switch (currentAnimationMode)
                 {
                     case AnimationMode.Wave:
                         position = Vector3.Lerp(start, end, t);
-                        position.x += Mathf.Sin(t * frequency + waveTimeOffset) * amplitude;
+                        position.x += Mathf.Sin(t * GunConfig.WaveFrequency + waveTimeOffset) * GunConfig.WaveAmplitude;
                         break;
 
                     case AnimationMode.Pulse:
-                        position = Vector3.Lerp(start, end, t + Mathf.Sin(Time.time * frequency) * 0.02f);
+                        position = Vector3.Lerp(start, end, t + Mathf.Sin(Time.time * GunConfig.WaveFrequency) * 0.02f);
                         break;
 
                     case AnimationMode.Zigzag:
                         position = Vector3.Lerp(start, end, t);
-                        position.x += (i % 2 == 0 ? 1 : -1) * amplitude * Mathf.Sin(waveTimeOffset);
+                        position.x += (i % 2 == 0 ? 1 : -1) * GunConfig.WaveAmplitude * Mathf.Sin(waveTimeOffset);
                         break;
 
                     case AnimationMode.Bouncing:
                         position = Vector3.Lerp(start, end, t);
-                        position.y += Mathf.Abs(Mathf.Sin(t * frequency + waveTimeOffset) * amplitude);
+                        position.y += Mathf.Abs(Mathf.Sin(t * GunConfig.WaveFrequency + waveTimeOffset) * GunConfig.WaveAmplitude);
                         break;
 
                     case AnimationMode.Spiral:
                         position = Vector3.Lerp(start, end, t);
-                        position.x += Mathf.Sin(t * frequency + waveTimeOffset) * amplitude;
-                        position.y += Mathf.Cos(t * frequency + waveTimeOffset) * amplitude;
+                        position.x += Mathf.Sin(t * GunConfig.WaveFrequency + waveTimeOffset) * GunConfig.WaveAmplitude;
+                        position.y += Mathf.Cos(t * GunConfig.WaveFrequency + waveTimeOffset) * GunConfig.WaveAmplitude;
                         break;
 
                     case AnimationMode.SineWave:
                         position = Vector3.Lerp(start, end, t);
-                        position.z += Mathf.Sin(t * frequency + waveTimeOffset) * amplitude;
+                        position.z += Mathf.Sin(t * GunConfig.WaveFrequency + waveTimeOffset) * GunConfig.WaveAmplitude;
                         break;
 
                     case AnimationMode.Helix:
                         position = Vector3.Lerp(start, end, t);
-                        position.x += Mathf.Sin(2 * Mathf.PI * frequency * t + waveTimeOffset) * amplitude;
-                        position.z += Mathf.Cos(2 * Mathf.PI * frequency * t + waveTimeOffset) * amplitude;
+                        position.x += Mathf.Sin(2 * Mathf.PI * GunConfig.WaveFrequency * t + waveTimeOffset) * GunConfig.WaveAmplitude;
+                        position.z += Mathf.Cos(2 * Mathf.PI * GunConfig.WaveFrequency * t + waveTimeOffset) * GunConfig.WaveAmplitude;
                         break;
 
                     case AnimationMode.Sawtooth:
                         position = Vector3.Lerp(start, end, t);
-                        position.z += amplitude * (2f * (t * frequency - Mathf.Floor(t * frequency + 0.5f)));
+                        position.z += GunConfig.WaveAmplitude * (2f * (t * GunConfig.WaveFrequency - Mathf.Floor(t * GunConfig.WaveFrequency + 0.5f)));
                         break;
 
                     case AnimationMode.TriangleWave:
                         position = Vector3.Lerp(start, end, t);
-                        position.y += amplitude * (2f * Mathf.Abs(2f * (t * frequency - Mathf.Floor(t * frequency + 0.5f))) - 1f);
+                        position.y += GunConfig.WaveAmplitude * (2f * Mathf.Abs(2f * (t * GunConfig.WaveFrequency - Mathf.Floor(t * GunConfig.WaveFrequency + 0.5f))) - 1f);
                         break;
 
                     case AnimationMode.DefaultBezier:
@@ -157,7 +163,7 @@ namespace Athrion.Libary
         {
             lineRenderer.startColor = startColor;
             lineRenderer.endColor = endColor;
-            lineRenderer.positionCount = LineCurve;
+            lineRenderer.positionCount = GunConfig.LineCurve;
             while (true)
             {
                 CurveLineRenderer(lineRenderer, start, mid, end);
@@ -170,7 +176,7 @@ namespace Athrion.Libary
             Vector3 originalScale = pointer.transform.localScale;
             while (true)
             {
-                float scaleFactor = 1 + Mathf.Sin(Time.time * PulseSpeed) * PulseAmplitude;
+                float scaleFactor = 1 + Mathf.Sin(Time.time * GunConfig.PulseSpeed) * GunConfig.PulseAmplitude;
                 pointer.transform.localScale = originalScale * scaleFactor;
                 yield return null;
             }
@@ -178,20 +184,20 @@ namespace Athrion.Libary
 
         private static void AddPointerParticles(GameObject pointer)
         {
-            if (!enableParticles) return;
+            if (!GunConfig.EnableParticles) return;
 
             particleSystem = pointer.AddComponent<ParticleSystem>();
             ParticleSystem.MainModule main = particleSystem.main;
-            main.startColor = new ParticleSystem.MinMaxGradient(PointerColorStart, PointerColorEnd);
-            main.startSize = 0.1f;
-            main.startSpeed = 0.5f;
-            main.maxParticles = 100;
+            main.startColor = new ParticleSystem.MinMaxGradient(GunConfig.PointerColorStart, GunConfig.PointerColorEnd);
+            main.startSize = GunConfig.ParticleStartSize;
+            main.startSpeed = GunConfig.ParticleStartSpeed;
+            main.maxParticles = GunConfig.ParticleMaxCount;
             main.duration = 1.0f;
             main.loop = true;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
 
             ParticleSystem.EmissionModule emission = particleSystem.emission;
-            emission.rateOverTime = 20f;
+            emission.rateOverTime = GunConfig.ParticleEmissionRate;
 
             ParticleSystem.ShapeModule shape = particleSystem.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
@@ -227,7 +233,7 @@ namespace Athrion.Libary
                     if (LockedRigOrPlayerOrwhatever == null)
                     {
                         spherepointer.transform.position = raycastHit.point;
-                        spherepointer.GetComponent<Renderer>().material.color = PointerColorStart;
+                        spherepointer.GetComponent<Renderer>().material.color = GunConfig.PointerColorStart;
 
                         if (LockOn && raycastHit.collider.GetComponentInParent<VRRig>() != null)
                         {
@@ -250,12 +256,12 @@ namespace Athrion.Libary
 
                 if (ControllerInputPoller.instance.rightControllerIndexFloat > 0.5f)
                 {
-                    spherepointer.GetComponent<Renderer>().material.color = TriggeredPointerColorStart;
+                    spherepointer.GetComponent<Renderer>().material.color = GunConfig.TriggeredPointerColorStart;
 
                     if (LockOn && LockedRigOrPlayerOrwhatever != null)
                     {
                         action();
-                        BoxESP();
+                        if (GunConfig.EnableBoxESP) BoxESP();
                     }
                     else if (!LockOn)
                     {
@@ -286,7 +292,7 @@ namespace Athrion.Libary
                     {
                         spherepointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                         spherepointer.AddComponent<Renderer>();
-                        spherepointer.transform.localScale = new Vector3(PointerScale, PointerScale, PointerScale);
+                        spherepointer.transform.localScale = GunConfig.PointerScale;
                         spherepointer.GetComponent<Renderer>().material.shader = Shader.Find("GUI/Text Shader");
                         Destroy(spherepointer.GetComponent<BoxCollider>());
                         Destroy(spherepointer.GetComponent<Rigidbody>());
@@ -302,7 +308,7 @@ namespace Athrion.Libary
                 if (LockedRigOrPlayerOrwhatever == null)
                 {
                     spherepointer.transform.position = raycastHit.point;
-                    spherepointer.GetComponent<Renderer>().material.color = PointerColorStart;
+                    spherepointer.GetComponent<Renderer>().material.color = GunConfig.PointerColorStart;
                 }
                 else
                 {
@@ -313,8 +319,8 @@ namespace Athrion.Libary
 
                 GameObject gameObject = new GameObject("Line");
                 LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
-                lineRenderer.startWidth = LineWidth;
-                lineRenderer.endWidth = LineWidth;
+                lineRenderer.startWidth = GunConfig.LineWidth;
+                lineRenderer.endWidth = GunConfig.LineWidth;
                 Shader lineShader = Shader.Find("Sprites/Default");
 
                 if (lineShader != null)
@@ -322,17 +328,17 @@ namespace Athrion.Libary
                     lineRenderer.material = new Material(lineShader);
                 }
                 AthrionGunLibrary instanceForLine = gameObject.AddComponent<AthrionGunLibrary>();
-                instanceForLine.StartCoroutine(StartCurvyLineRenderer(lineRenderer, GorillaTagger.Instance.rightHandTransform.position, lr, spherepointer.transform.position, LineColorStart, LineColorEnd));
-                instanceForLine.StartCoroutine(AnimateLineGradient(lineRenderer, LineColorStart, LineColorEnd));
+                instanceForLine.StartCoroutine(StartCurvyLineRenderer(lineRenderer, GorillaTagger.Instance.rightHandTransform.position, lr, spherepointer.transform.position, GunConfig.LineColorStart, GunConfig.LineColorEnd));
+                instanceForLine.StartCoroutine(AnimateLineGradient(lineRenderer, GunConfig.LineColorStart, GunConfig.LineColorEnd));
 
                 if (spherepointer.transform.hasChanged)
                 {
-                    if (enableParticles && !particleSystem.isPlaying)
+                    if (GunConfig.EnableParticles && !particleSystem.isPlaying)
                     {
                         particleSystem.Play();
                     }
                 }
-                else if (enableParticles)
+                else if (GunConfig.EnableParticles)
                 {
                     particleSystem.Stop();
                 }
@@ -341,7 +347,7 @@ namespace Athrion.Libary
 
                 if (Mouse.current.leftButton.isPressed)
                 {
-                    spherepointer.GetComponent<Renderer>().material.color = TriggeredPointerColorStart;
+                    spherepointer.GetComponent<Renderer>().material.color = GunConfig.TriggeredPointerColorStart;
                     if (LockOn)
                     {
                         if (LockedRigOrPlayerOrwhatever == null)
@@ -358,7 +364,7 @@ namespace Athrion.Libary
                         {
                             spherepointer.transform.position = LockedRigOrPlayerOrwhatever.transform.position;
                             action();
-                            BoxESP();
+                            if (GunConfig.EnableBoxESP) BoxESP();
                         }
                         return;
                     }
@@ -383,7 +389,7 @@ namespace Athrion.Libary
         {
             spherepointer = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             spherepointer.AddComponent<Renderer>();
-            spherepointer.transform.localScale = new Vector3(PointerScale, PointerScale, PointerScale);
+            spherepointer.transform.localScale = GunConfig.PointerScale;
             spherepointer.GetComponent<Renderer>().material.shader = Shader.Find("GUI/Text Shader");
             Destroy(spherepointer.GetComponent<BoxCollider>());
             Destroy(spherepointer.GetComponent<Rigidbody>());
@@ -408,8 +414,8 @@ namespace Athrion.Libary
 
             GameObject gameObject = new GameObject("Line");
             LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
-            lineRenderer.startWidth = LineWidth;
-            lineRenderer.endWidth = LineWidth;
+            lineRenderer.startWidth = GunConfig.LineWidth;
+            lineRenderer.endWidth = GunConfig.LineWidth;
             Shader lineShader = Shader.Find("Sprites/Default");
 
             if (lineShader != null)
@@ -418,16 +424,16 @@ namespace Athrion.Libary
             }
 
             AthrionGunLibrary instanceForLine = gameObject.AddComponent<AthrionGunLibrary>();
-            instanceForLine.StartCoroutine(StartCurvyLineRenderer(lineRenderer, GorillaTagger.Instance.rightHandTransform.position, lr, spherepointer.transform.position, LineColorStart, LineColorEnd));
-            instanceForLine.StartCoroutine(AnimateLineGradient(lineRenderer, LineColorStart, LineColorEnd));
+            instanceForLine.StartCoroutine(StartCurvyLineRenderer(lineRenderer, GorillaTagger.Instance.rightHandTransform.position, lr, spherepointer.transform.position, GunConfig.LineColorStart, GunConfig.LineColorEnd));
+            instanceForLine.StartCoroutine(AnimateLineGradient(lineRenderer, GunConfig.LineColorStart, GunConfig.LineColorEnd));
 
             Destroy(lineRenderer, Time.deltaTime);
         }
 
         public static void ToggleParticles()
         {
-            enableParticles = !enableParticles;
-            if (!enableParticles && particleSystem != null)
+            GunConfig.EnableParticles = !GunConfig.EnableParticles;
+            if (!GunConfig.EnableParticles && particleSystem != null)
             {
                 AthrionGunLibrary instance = spherepointer.AddComponent<AthrionGunLibrary>();
                 instance.StartCoroutine(SmoothStopParticles());
@@ -487,21 +493,19 @@ namespace Athrion.Libary
                 new Color32(139, 0, 0, 255)
             };
 
+            if (!colorIndexInitialized)
+            {
+                ColorIndex = 0;
+                colorIndexInitialized = true;
+            }
+
             ColorIndex = (ColorIndex + 1) % colors.Length;
 
             Color32 selectedColorStart = colors[ColorIndex];
             Color32 selectedColorEnd = Color.Lerp(selectedColorStart, new Color32(255, 255, 255, 255), 0.5f);
 
-            PointerColorStart = selectedColorStart;
-            PointerColorEnd = selectedColorEnd;
-
-            LineColorStart = selectedColorStart;
-            LineColorEnd = selectedColorEnd;
-
-            TriggeredPointerColorStart = selectedColorStart;
-            TriggeredPointerColorEnd = selectedColorEnd;
-            TriggeredLineColorStart = selectedColorStart;
-            TriggeredLineColorEnd = selectedColorEnd;
+            GunConfig.PointerColorStart = selectedColorStart;
+            GunConfig.PointerColorEnd = selectedColorEnd;
 
             if (spherepointer != null)
             {
@@ -515,20 +519,19 @@ namespace Athrion.Libary
             }
         }
 
-        public static int ColorIndex = 0;
-
         private static IEnumerator AnimateBox(GameObject box, LineRenderer outline)
         {
             Vector3 originalScale = box.transform.localScale;
             while (box != null)
             {
-                float scaleFactor = 1 + Mathf.Sin(Time.time * PulseSpeed) * PulseAmplitude;
+                float scaleFactor = 1 + Mathf.Sin(Time.time * GunConfig.PulseSpeed) * GunConfig.PulseAmplitude;
                 box.transform.localScale = originalScale * scaleFactor;
-                outline.startColor = Color.Lerp(Color.green, Color.cyan, Mathf.PingPong(Time.time, 1));
-                outline.endColor = Color.Lerp(Color.green, Color.cyan, Mathf.PingPong(Time.time, 1));
+                outline.startColor = Color.Lerp(GunConfig.BoxESPColor, GunConfig.BoxESPOuterColor, Mathf.PingPong(Time.time, 1));
+                outline.endColor = Color.Lerp(GunConfig.BoxESPColor, GunConfig.BoxESPOuterColor, Mathf.PingPong(Time.time, 1));
                 yield return null;
             }
         }
+
         public static void BoxESP()
         {
             if (PhotonNetwork.InRoom || PhotonNetwork.InLobby)
@@ -540,8 +543,8 @@ namespace Athrion.Libary
                     Vector3 rigPosition = LockedRigOrPlayerOrwhatever.transform.position;
 
                     Vector3[] corners = new Vector3[5];
-                    float height = 2.0f;
-                    float width = 1.0f;
+                    float height = GunConfig.BoxESPHeight;
+                    float width = GunConfig.BoxESPWidth;
 
                     corners[0] = rigPosition + LockedRigOrPlayerOrwhatever.transform.right * (-width / 2) + LockedRigOrPlayerOrwhatever.transform.up * (height / 2);
                     corners[1] = rigPosition + LockedRigOrPlayerOrwhatever.transform.right * (width / 2) + LockedRigOrPlayerOrwhatever.transform.up * (height / 2);
@@ -559,8 +562,8 @@ namespace Athrion.Libary
                         outline.material = new Material(outlineShader);
                     }
                     outline.material.renderQueue = 3000;
-                    outline.startColor = Color.Lerp(Color.green, Color.cyan, Mathf.PingPong(Time.time, 1));
-                    outline.endColor = Color.Lerp(Color.green, Color.cyan, Mathf.PingPong(Time.time, 1));
+                    outline.startColor = GunConfig.BoxESPColor;
+                    outline.endColor = GunConfig.BoxESPColor;
 
                     LineRenderer outerOutline = new GameObject().AddComponent<LineRenderer>();
                     outerOutline.transform.parent = box.transform;
@@ -582,8 +585,8 @@ namespace Athrion.Libary
                         outerOutline.material = new Material(outerShader);
                     }
                     outerOutline.material.renderQueue = 3000;
-                    outerOutline.startColor = Color.Lerp(Color.yellow, Color.magenta, Mathf.PingPong(Time.time, 1));
-                    outerOutline.endColor = Color.Lerp(Color.yellow, Color.magenta, Mathf.PingPong(Time.time, 1));
+                    outerOutline.startColor = GunConfig.BoxESPOuterColor;
+                    outerOutline.endColor = GunConfig.BoxESPOuterColor;
 
                     box.transform.position = LockedRigOrPlayerOrwhatever.transform.position;
                     box.transform.rotation = LockedRigOrPlayerOrwhatever.transform.rotation;
@@ -595,9 +598,19 @@ namespace Athrion.Libary
                 }
             }
         }
+
         public static void ToggleAnimationMode()
         {
             currentAnimationMode = (AnimationMode)(((int)currentAnimationMode + 1) % Enum.GetValues(typeof(AnimationMode)).Length);
+        }
+
+        public static Vector3 GetPointerPos()
+        {
+            if (spherepointer != null)
+            {
+                return spherepointer.transform.position;
+            }
+            return Vector3.zero;
         }
     }
 }
