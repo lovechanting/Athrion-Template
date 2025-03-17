@@ -1,14 +1,14 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 
 public class Config
 {
-    public Vector3 PlatformScale { get; set; } = new Vector3(0.6f, 0.03f, 0.6f); // Platform Scale/Size
-    public Color PlatformColor { get; set; } = new Color(0.95f, 0.85f, 0.65f); // Platform Color
-    public bool EnableAnimations { get; set; } = false; // Enable Animations
-    public PlatformAnimationType AnimationType { get; set; } = PlatformAnimationType.None; // Platform animation type change none to a Enum
-    public Vector3 SpawnOffset { get; set; } = new Vector3(0, -0.1f, 0); // Keep it like this if you want it to spawn bellow the hand!
+    public Vector3 PlatformScale { get; set; } = new Vector3(0.4f, 0.01f, 0.4f);
+    public Color PlatformColor { get; set; } = new Color(0.95f, 0.85f, 0.65f);
+    public bool EnableAnimations { get; set; } = false;
+    public PlatformAnimationType AnimationType { get; set; } = PlatformAnimationType.None;
+    public Vector3 SpawnOffset { get; set; } = new Vector3(0, -0.1f, 0);
 }
 
 public enum PlatformAnimationType
@@ -65,6 +65,11 @@ public class PlatformLibrary : MonoBehaviour
         platform.transform.position = position;
         platform.transform.localScale = config.PlatformScale;
         platform.name = name;
+
+        BoxCollider collider = platform.GetComponent<BoxCollider>();
+        collider.size = new Vector3(1, 0.1f, 1);
+        collider.center = new Vector3(0, 0.45f, 0);
+
         Renderer renderer = platform.GetComponent<Renderer>();
         renderer.material.color = config.PlatformColor;
 
