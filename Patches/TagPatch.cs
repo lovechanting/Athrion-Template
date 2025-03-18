@@ -5,7 +5,7 @@ public static class TagPatch
 {
     public static void EST()
     {
-        var harmony = new Harmony("com.yourmod.silenttag");
+        var harmony = new Harmony("com.athrion.silenttag");
         harmony.PatchAll();
     }
 
