@@ -43,7 +43,7 @@ namespace Athrion.Utilities
                     menuObject = new GameObject("AthrionOS");
                     menuObject.AddComponent<Menu>();
                     GameObject.DontDestroyOnLoad(menuObject);
-                    Debug.Log("Successfully Initialized Athrion OS!"); // I got bored while making that line of code just thought ya needed to know.
+                    Debug.Log("Successfully Initialized Athrion OS!"); 
                 }
             }
         }
